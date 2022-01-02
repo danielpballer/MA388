@@ -1,0 +1,140 @@
+---
+title: "Lesson 5"
+author: "Daniel Baller"
+date: "1/20/2021"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+library(Lahman)
+library(tidyverse)
+library(knitr)
+```
+
+## Review
+
+Key concepts
+
+-   five tidyverse verbs
+
+-   relational data bases
+
+-   split, apply, combine
+
+Review Question
+
+-   Using the Batting data frame, determine who held the *career* home
+    run record by season from 1900 to the present. In other words,
+    produce a table with one row per season indicating who the current
+    career home run leader was in baseball at that time. Add their full
+    name to the table using the People data frame.
+
+Here is one approach:
+
+-   Add a column to the Batting data frame indicating each player's
+    cumulative home runs (hint: cumsum) at the end of the season.
+
+-   write a function that takes a data frame and a year as arguments and
+    returns the player with the most career homeruns that year or
+    earlier.
+
+-   map the function over the seasons from 1900 to 2019.
+
+-   add player information from the People data frame
+
+```{r}
+# add career homeruns to Batting
+
+
+#function to calculate career leader as of year = year
+
+
+# map function over each year
+
+
+
+# add year 
+
+
+#add player's full name
+
+```
+
+## GGplot: its like baking a cake, you create it in layers
+
+
+
+### long vs wide format
+
+With ggplot, you will typically want data in long format as opposed to
+wide format. What's the difference?
+
+```{r}
+# here are Mark McGwire and Sammy Sosa's HR for 1998-2001
+data_long <- Batting %>% 
+  filter(yearID >= 1998, 
+         yearID <= 2001, 
+         playerID %in% c("mcgwima01","sosasa01")) %>% 
+  select(yearID, playerID, HR)
+
+#this data is in long format
+data_long %>% kable()
+
+data_wide <- data_long %>% 
+  pivot_wider(id_cols = playerID, names_from = yearID, values_from = HR)
+
+#this data is in wide format
+data_wide %>% kable()
+
+#to go back to long format
+data_wide %>% pivot_longer(cols = -1, names_to = "Year", values_to = "HR")
+```
+
+A basic ggplot has the data frame, aesthetic, and at least one geometry
+Going back to the Review, let's plot the number of home runs for the
+career home run leader by year.
+
+```{r, fig.height=3}
+
+```
+
+Now, let's add the player's name to the plot:
+
+```{r, fig.height=3}
+
+```
+
+We can also do this using color rather than linetype (or both):
+
+```{r, fig.height=3}
+
+```
+
+Next, let's change the labels and add a title:
+
+```{r, fig.height=3, caption = "Career home run leader by season."}
+
+```
+
+Lastly, let's change the theme:
+
+```{r, fig.height=3, caption = "Career home run leader by season."}
+
+```
+
+### Your turn
+
+Using the Batting data frame, plot a scatterplot of Henry Aaron's home
+runs (`y-axis`) vs batting average (`x-axis`) by season. Color the
+points in the plot by team name. Change the labels to "Batting Average", "Home
+Runs", and "Team".
+
+```{r, fig.height=3, fig.cap = "Henry Aaron's home runs vs batting average by year and team."}
+
+```
