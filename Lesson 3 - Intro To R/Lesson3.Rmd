@@ -1,0 +1,140 @@
+---
+title: "Lesson 3"
+author: "Daniel Baller"
+date: "1/10/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+
+
+```
+
+## Projects
+
+## R Markdown overview.  
+
+- Three elements to a markdown document
+- Good habits for coding
+ + Naming code Chunks
+ + Don't alter raw data
+ + Hard code only when necessary
+- Text formatting
+- Visual editor
+
+
+For more info on using R markdown check out the slides [HERE](https://danielpballer.github.io/Rmarkdown_and_GitHub_Class/#1)
+
+or the R Markdown Cheat sheet in the files of our teams page.
+
+## Compiling a .Rmd file
+
+
+
+
+```{r }
+library(Lahman)
+library(tidyverse)
+library(knitr)
+```
+
+# Chapter 2 Intro to R
+
+Tidyverse Verbs (pg 35)
+
+* `select()`
+
+* `filter()`
+
+* `group_by()`
+
+* `mutate()`
+
+* `summarize()`
+
+* `arrange()`
+
+Let's investigate how home run rates in Major League Baseball have changed over time. The R Lahman package imports data from Sean Lahman's Baseball Archive.  In this example, we will use the Batting data frame in the package.
+
+First let's explore what data we can pull from the Batting dataframe
+```{r Exploring out the batting dataframe}
+# Batting data frame contains one line per player per season per stint
+# Here are players with the most home runs in a season
+Batting %>% 
+  select(playerID, yearID, stint, lgID, HR, AB) %>% 
+  arrange(-HR) %>% 
+  head(10) %>% 
+  kable()
+```
+
+Steps to this coding task:
+
+1. Include only players in Major League Baseball
+2. Calculate the total number of home runs (HR) and at bats (AB) each season
+3. Calculate the home run rate each season
+
+```{r Calculating home run Rates by season}
+# calculate the home run rate for each season
+homeRuns <- Batting %>% 
+  filter(lgID %in% c("AL","NL")) %>% 
+  group_by(yearID) %>% 
+  summarize(HR = sum(HR),
+            AB = sum(AB)) %>% 
+  mutate(rate = HR/AB)
+
+homeRuns %>% 
+  head(10) %>% 
+  kable()
+```
+
+Let's look at a plot
+
+```{r Plotting home runs by year, fig.cap = "Home run rate in Major League Baseball by year.", fig.height = 3}
+homeRuns %>% 
+  ggplot(aes(x = yearID, y = rate)) +
+  geom_line() +
+  labs(x = "year",
+       y = "Home run rate")+
+  theme_classic()
+```
+
+
+* Use R to find career batting average (H/AB) leaders of your favorite team.  More specifically, select a team and report a table of the 10 players with at least 2500 at bats (AB) with the highest batting averages while playing for that team.
+
+\vspace{2in}
+
+```{r, echo=FALSE}
+
+```
+
+
+## Merging data frames (pg 41)
+
+When using relational data bases (what does that mean again?), a common task is to add information from one data base to another.  For example, consider our table above.  Add the player's name and when they played their final game.
+
+```{r}
+# I called my table from the review Mariners
+Mariners <- Mariners %>% 
+  left_join(select(People, playerID, nameLast, nameFirst, finalGame), by = "playerID" )
+
+Mariners %>% 
+  head(10) %>% 
+  kable(digits = 3, caption = "Mariners career batting average leaders.")
+```
+
+Your turn...the HallofFame data frame contains data on every hall of fame ballot.  Add to your table above whether the player is in the Hall of Fame. (hint: filter(inducted == "Y"))
+
+\vspace{1in}
+
+```{r, echo = FALSE}
+
+```
+
+What is the difference between `left_join()`, `right_join()`, `inner_join()`, `full_join()`, `anti_join()`?
+
+\vspace{1in}
+
+

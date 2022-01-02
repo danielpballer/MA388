@@ -1,0 +1,152 @@
+---
+title: "Lesson 4 Solution"
+author: "Daniel Baller"
+date: "1/13/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+library(Lahman)
+library(tidyverse)
+library(knitr)
+```
+
+
+## Last Class
+
+Key concepts
+
+* five tidyverse verbs
+
+* relational data bases
+
+Review Questions
+
+* Using the Teams data frame, calculate average wins (W) per season for each MLB team from 2000-present.  Order your results from the best teams to the worst.
+
+```{r}
+wins2000 <- Teams %>% 
+  filter(yearID >= 2000) %>% 
+  group_by(teamID) %>% 
+  summarize(W = sum(W),
+            G = sum(G)) %>% 
+  mutate(Wpct = W/G) %>% 
+  arrange(-Wpct)
+
+ wins2000 %>% 
+  kable(digits = 3)
+```
+
+* Using the Teams data frame, calculate how many World Series wins (WSWin) each team had during this period and add this information to your table in the previous question.
+
+```{r}
+wins2000 <- Teams %>% 
+  filter(yearID >= 2000) %>% # Filter for entries from 2000 or later
+  count(WSWin, teamID) %>% # count number of wins and losses for each team
+  filter(WSWin == "Y") %>% # only keep the number of wins for each team
+  select(teamID, n) %>% # only select these columns
+  right_join(wins2000, key = "teamID") #add to the original dataframe with a right join.  
+
+wins2000 %>% 
+  kable(digits = 3, caption = "Win percentage and World Series titles by team (2000-present).")
+```
+
+## Intro to R (Day 2)
+
+### Split, apply, and combine data (pg 58)
+
+It's important in data science to be able to write procedures and apply them over a data set. The Marchi text refers to this as "splitting, applying, and combining data".  In other words, we split a data frame into pieces, apply a procedure or function to each piece, and then combine the results into a new data frame.
+
+Ways to "split, apply, and combine"...
+
+* `group_by()` and `summarize()` functions
+
+* `split()` and `map_df()` functions
+
+In general, these coding tasks involve three steps:
+
+1. write a function to perform the task on one split of the data
+
+2. split the data on a variable
+
+3. apply the function to each split of the data
+
+### Example
+
+\textit{Find the team with the most wins for each season and whether the team won the World Series.}
+
+Two steps:
+
+1. write a function that takes a data frame and returns the team with the most wins and whether they won the World Series
+
+2. split the data frame on yearID
+
+3. apply the function to each split
+
+```{r}
+#step 1 - write a function
+
+#first write what you want the function to do on a small piece of the data
+Teams %>% 
+  filter(yearID==2000) %>% #Select only entries for the year 2000
+  arrange(-W) %>% #arrange in decending order by number of wins
+  select(teamID, W, WSWin) %>% #only select these three columns
+  head(1) #pick the top one by number of wins
+
+#next generalize function to work with whatever data you provide
+mostWins <- function(data){
+  data %>% 
+    arrange(-W) %>% 
+    select(teamID, W, WSWin) %>% 
+    head(1)
+}
+
+#step 2 and 3 - split and apply
+winLeaders <- Teams %>% 
+  filter(yearID >= 2000) %>% #filter for entries in the year 2000 and later
+  split(pull(.,yearID)) %>%  #turn the dataframe into a list where each entry is split by the yearID
+  map_dfr(mostWins, .id = "yearID") #apply the function each entry of the list and provide the results as a dataframe
+
+winLeaders %>% 
+  kable(caption = "Major League win leaders by season and whether they won the World Series.")
+
+```
+
+\textit{Note functions are not executed until they are called.}
+
+### Your turn
+
+\textit{Find the team with the most home runs for each season from 2000-present.  Include the team's full name in your table instead of just the teamID.}
+
+```{r}
+#step 1 - write a function
+mostHRs <- function(data){
+  data %>% 
+    arrange(-HR) %>% 
+    select(teamID, HR, name) %>% 
+    head(1)
+}
+
+#step 2 and 3 - split and apply
+HRLeaders <- Teams %>% 
+  filter(yearID >= 2000) %>% 
+  split(pull(.,yearID)) %>% 
+  map_dfr(mostHRs, .id = "yearID")
+
+HRLeaders %>% 
+  select(yearID, name, HR) %>% 
+  kable(caption = "Major League win leaders by season and whether they won the World Series.")
+
+#Difference between select and pull.  
+HRLeaders %>% 
+  select(yearID)
+
+HRLeaders %>% 
+  pull(yearID)
+```
+
